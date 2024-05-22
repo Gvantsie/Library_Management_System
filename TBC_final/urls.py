@@ -21,6 +21,7 @@ from django.urls import path, include
 from TBC_final import settings
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', include('library.urls')),
 
 ]

@@ -30,3 +30,6 @@ class Book(models.Model):
         ordering = ['title']
         verbose_name = _("Book")
         verbose_name_plural = _("Books")
+
+    def is_available(self):
+        return self.status == 'available' and self.stock > 0
