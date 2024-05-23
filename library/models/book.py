@@ -14,7 +14,6 @@ class Book(models.Model):
     genre = models.ManyToManyField(Genre, verbose_name=_("Genre"))
     title = models.CharField(verbose_name=_("Title"), max_length=100)
     description = models.TextField(verbose_name=_("Description"))
-    age_group = models.CharField(verbose_name=_("Age Group"), max_length=50)
     stock = models.IntegerField(verbose_name=_("Stock"))
     publication_date = models.DateField(verbose_name=_("Publication Date"))
     cover_type = models.CharField(verbose_name=_("Cover Type"), choices=COVER_CHOICES, max_length=30,
