@@ -8,7 +8,6 @@ from library.models.author import Author
 from library.models.genre import Genre
 
 
-# Create your models here.
 class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, verbose_name=_("Author"), related_name='books')
     genre = models.ManyToManyField(Genre, verbose_name=_("Genre"))
@@ -22,6 +21,10 @@ class Book(models.Model):
     status = models.CharField(verbose_name=_("Status"), choices=STATUS_CHOICES, max_length=30,
                               default="available", null=False)
 
+    # New fields to track borrowing history and total copies
+    times_borrowed = models.PositiveIntegerField(default=0, verbose_name=_("Times Borrowed"))
+    total_copies = models.PositiveIntegerField(default=0, verbose_name=_("Total Copies"))
+
     def __str__(self):
         return self.title
 
@@ -32,3 +35,12 @@ class Book(models.Model):
 
     def is_available(self):
         return self.status == 'available' and self.stock > 0
+
+    def update_borrowing_stats(self, increase=True):
+        """Update borrowing statistics for the book."""
+        if increase:
+            self.times_borrowed += 1
+            self.stock -= 1
+        else:
+            self.stock += 1
+        self.save(update_fields=['times_borrowed', 'stock'])
