@@ -43,7 +43,6 @@ INSTALLED_APPS = [
 
     'users',
     'library',
-    'utils',
 
 ]
 
