@@ -22,7 +22,7 @@ class AuthorFactory(factory.django.DjangoModelFactory):
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     date_of_birth = factory.Faker('date_of_birth', minimum_age=18)
-    date_of_death = factory.Iterator([fake.date_this_decade(before_today=True) for _ in range(50)])
+    date_of_death = factory.LazyFunction(lambda: fake.date_this_decade(before_today=True))
 
 
 class BookFactory(factory.django.DjangoModelFactory):
@@ -30,7 +30,6 @@ class BookFactory(factory.django.DjangoModelFactory):
         model = Book
 
     author = factory.SubFactory(AuthorFactory)
-    genre = factory.RelatedFactoryList(GenreFactory, size=lambda: fake.random_int(min=1, max=3))
     title = factory.Faker('sentence', nb_words=6)
     description = factory.Faker('text', max_nb_chars=200)
     stock = factory.Faker('random_int', min=1, max=100)
@@ -38,6 +37,13 @@ class BookFactory(factory.django.DjangoModelFactory):
     cover_type = factory.Iterator(['hard', 'soft'])
     status = 'available'
 
+    @factory.post_generation
+    def genres(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
 
-def import_books(num_books):
-    books = BookFactory.create_batch(num_books)
+        if extracted:
+            # A list of genres were passed in, use them
+            for genre in extracted:
+                self.genres.add(genre)

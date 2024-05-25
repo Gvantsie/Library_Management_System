@@ -1,74 +1,42 @@
-# from django.core.management import call_command
-# from django.test import TestCase
-# from unittest.mock import patch
-#
-# from library.models.author import Author
-# from library.models.book import Book
-# from library.models.genre import Genre
-#
-#
-# class ImportBooksCommandTestCase(TestCase):
-#     @patch('requests.get')
-#     def test_import_books_success(self, mock_get):
-#         # Mock the API response
-#         mock_get.return_value.status_code = 200
-#         mock_get.return_value.json.return_value = {
-#             'items': [
-#                 {
-#                     'volumeInfo': {
-#                         'title': 'Test Book',
-#                         'description': 'Test Description',
-#                         'publishedDate': '2022-01-01',
-#                         'authors': ['Test Author'],
-#                         'categories': ['Test Genre']
-#                     }
-#                 }
-#             ]
-#         }
-#
-#         # Call the custom command
-#         call_command('import_books')
-#
-#         # Assert that the book and author were created
-#         self.assertTrue(Author.objects.filter(first_name='Test', last_name='Author').exists())
-#         self.assertTrue(Book.objects.filter(title='Test Book').exists())
-#         self.assertTrue(Genre.objects.filter(genre_name='Test Genre').exists())
-#
-#     @patch('requests.get')
-#     def test_import_books_failure(self, mock_get):
-#         # Mock the API response to simulate failure
-#         mock_get.return_value.status_code = 404
-#
-#         # Call the custom command
-#         with self.assertRaises(SystemExit):
-#             call_command('import_books')
+import threading
+from django.core.management import BaseCommand
+from library.models.genre import Genre
+from library.factories import import_books
 
+class Command(BaseCommand):
+    help = 'Imports books into the database(Command <num_books> <num_threads>).'
 
-from django.core.management import call_command
-from django.test import TestCase
-from unittest.mock import patch
-import io
-from contextlib import redirect_stdout
+    def add_arguments(self, parser):
+        parser.add_argument('num_books', type=int, help='Number of books to import')
+        parser.add_argument('num_threads', type=int, help='Number of threads to use')
 
+    def handle(self, *args, **options):
+        num_books = options['num_books']
+        num_threads = options['num_threads']
 
-class ImportBooksCommandTest(TestCase):
+        # Calculate the number of books per thread
+        books_per_thread = num_books // num_threads
 
-    @patch('library.factories.import_books')
-    def test_import_1000_books_command(self, mock_import_books):
-        num_books = 1000
-        num_threads = 10
+        threads = []
+        for i in range(num_threads):
+            if i == num_threads - 1:
+                # The last thread will handle the remaining books
+                num_books_for_thread = num_books - (books_per_thread * i)
+            else:
+                num_books_for_thread = books_per_thread
 
-        # Capture the output
-        out = io.StringIO()
-        with redirect_stdout(out):
-            # Run the management command
-            call_command('import_books', num_books, num_threads)
+            thread = threading.Thread(target=self.import_books_with_genres, args=(num_books_for_thread,))
+            threads.append(thread)
+            thread.start()
 
-        # Check that import_books was called with the correct arguments
-        expected_calls = [((100,),)] * 10
-        self.assertEqual(mock_import_books.call_count, 10)
-        mock_import_books.assert_has_calls(expected_calls, any_order=True)
+        for thread in threads:
+            thread.join()
 
-        # Check that the output is correct
-        output = out.getvalue().strip()
-        self.assertIn('Successfully imported 1000 books.', output)
+        self.stdout.write(self.style.SUCCESS(f'Successfully imported {num_books} books.'))
+
+    def import_books_with_genres(self, num_books):
+        genres_list = ['Fantasy', 'Science Fiction', 'Mystery', 'Romance', 'Thriller', 'Horror', 'Historical Fiction', 'Non-fiction', 'Biography', 'Self-help']
+
+        for genre_name in genres_list:
+            # Create or get Genre object using genre_name
+            genre, created = Genre.objects.get_or_create(genre_name=genre_name)
