@@ -42,10 +42,33 @@
 #         # Call the custom command
 #         with self.assertRaises(SystemExit):
 #             call_command('import_books')
-from library.models.author import Author
-from library.models.book import Book
-from library.models.genre import Genre
 
-Book.objects.all().delete()
-Author.objects.all().delete()
-Genre.objects.all().delete()
+
+from django.core.management import call_command
+from django.test import TestCase
+from unittest.mock import patch
+import io
+from contextlib import redirect_stdout
+
+
+class ImportBooksCommandTest(TestCase):
+
+    @patch('library.factories.import_books')
+    def test_import_1000_books_command(self, mock_import_books):
+        num_books = 1000
+        num_threads = 10
+
+        # Capture the output
+        out = io.StringIO()
+        with redirect_stdout(out):
+            # Run the management command
+            call_command('import_books', num_books, num_threads)
+
+        # Check that import_books was called with the correct arguments
+        expected_calls = [((100,),)] * 10
+        self.assertEqual(mock_import_books.call_count, 10)
+        mock_import_books.assert_has_calls(expected_calls, any_order=True)
+
+        # Check that the output is correct
+        output = out.getvalue().strip()
+        self.assertIn('Successfully imported 1000 books.', output)

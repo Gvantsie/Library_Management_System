@@ -2,7 +2,7 @@ import threading
 
 from django.core.management import BaseCommand
 
-from utils.factories import import_books
+from library.factories import import_books
 
 
 class Command(BaseCommand):

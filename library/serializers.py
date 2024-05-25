@@ -1,4 +1,3 @@
-# serializers.py
 from rest_framework import serializers
 
 from library.models.book import Book
