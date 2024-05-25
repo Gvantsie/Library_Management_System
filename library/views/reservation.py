@@ -1,11 +1,11 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 
 from library.models.book import Book
 from library.models.reservation import Reservation
-from library.serializers import BookSerializer, ReservationSerializer
+from library.serializers.reservation_serializers import ReservationSerializer, ReservationReturnSerializer
 
 
 # Create your views here
@@ -42,3 +42,16 @@ class ReturnBookView(APIView):
             return Response(status=status.HTTP_200_OK)
         except Reservation.DoesNotExist:
             return Response({"detail": "Invalid reservation ID or reservation already returned."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MarkBookReturnedView(generics.UpdateAPIView):
+    queryset = Reservation.objects.filter(returned=False)
+    serializer_class = ReservationReturnSerializer
+    permission_classes = [IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(returned=True)
+        return Response(serializer.data)
