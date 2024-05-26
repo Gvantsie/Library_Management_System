@@ -148,7 +148,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# GOOGLE_BOOKS_API_KEY = 'AIzaSyB6RmFLJlk8mrQUs6OypqiCIHc0FPXG8bc'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
