@@ -13,6 +13,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from library.models.user_stats import UserStatistics
@@ -40,8 +41,13 @@ class RegisterView(APIView):
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
-    # authentication_classes = (TokenAuthentication,)  # we have to add header with our authentication token
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
+
+    def get(self, request: Request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.serializer_class(user)
+        return Response(serializer.data)
 
 
 class UserLoginView(ObtainAuthToken):

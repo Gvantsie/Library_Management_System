@@ -17,10 +17,6 @@ urlpatterns = [
     path('user/', UserView.as_view(), name='user'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-    # path('auth/', obtain_auth_token, name='auth'),
-    # path('api-token-auth/', CustomAuthToken.as_view(), name='api_token_auth'),
-
-
 
     path('books/', BookListView.as_view(), name='book-list'),
     path('statistics/', UserStatisticsView.as_view(), name='user-statistics'),
