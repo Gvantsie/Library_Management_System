@@ -15,8 +15,8 @@ urlpatterns = [
     path('create-user/', UserCreateView.as_view(), name='user-create'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('auth/', obtain_auth_token, name='auth'),
-    path('login/', UserLoginView.as_view(), name='login'),
-    path('register/', register, name='register_user'),
+    # path('login/', UserLoginView.as_view(), name='login'),
+    # path('register/', register, name='register_user'),
 
     path('login/', LoginView, name='login'),
     path('books/', BookListView.as_view(), name='book-list'),
