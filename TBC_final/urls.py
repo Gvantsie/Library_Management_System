@@ -23,6 +23,7 @@ from library.views.home import home
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api-auth/', include('rest_framework.urls')),
     path('', home, name='home'),
     path('library/', include('library.urls')),
     path('auth/', include('users.urls')),
