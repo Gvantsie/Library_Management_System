@@ -9,6 +9,7 @@ from library.views.statistics import (PopularBooksAPIView,
                                       LateReturnedBooksAPIView,
                                       LateReturnedUsersAPIView)
 
+
 urlpatterns = [
     path('books/', BookListView.as_view(), name='book-list'),
     path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),
@@ -19,5 +20,4 @@ urlpatterns = [
     path('statistics/book-stats/', BookStatisticsAPIView.as_view(), name='book-stats'),
     path('statistics/late-returned-books/', LateReturnedBooksAPIView.as_view(), name='late-returned-books'),
     path('statistics/late-returned-users/', LateReturnedUsersAPIView.as_view(), name='late-returned-users'),
-
 ]

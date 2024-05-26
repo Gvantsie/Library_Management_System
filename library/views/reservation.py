@@ -44,6 +44,7 @@ class ReturnBookView(APIView):
             return Response({"detail": "Invalid reservation ID or reservation already returned."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# Endpoint to mark a book as returned
 class MarkBookReturnedView(generics.UpdateAPIView):
     queryset = Reservation.objects.filter(returned=False)
     serializer_class = ReservationReturnSerializer
