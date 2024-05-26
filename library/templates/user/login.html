@@ -1,239 +1,34 @@
-{#<!DOCTYPE html>#}
-{#<html>#}
-{#<head>#}
-{#  <title>Login</title>#}
-{#  <style>#}
-{#    body {#}
-{#      font-family: Arial, sans-serif;#}
-{#      background-color: #f2f2f2;#}
-{#    }#}
-{##}
-{#    .container {#}
-{#      max-width: 400px;#}
-{#      margin: 0 auto;#}
-{#      padding: 20px;#}
-{#      background-color: #fff;#}
-{#      border-radius: 5px;#}
-{#      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);#}
-{#    }#}
-{##}
-{#    h1 {#}
-{#      text-align: center;#}
-{#    }#}
-{##}
-{#    .form-group {#}
-{#      margin-bottom: 20px;#}
-{#    }#}
-{##}
-{#    label {#}
-{#      display: block;#}
-{#      font-weight: bold;#}
-{#      margin-bottom: 5px;#}
-{#    }#}
-{##}
-{#    input[type="text"],#}
-{#    input[type="password"] {#}
-{#      width: 100%;#}
-{#      padding: 10px;#}
-{#      border: 1px solid #ccc;#}
-{#      border-radius: 4px;#}
-{#      box-sizing: border-box;#}
-{#    }#}
-{##}
-{#    button {#}
-{#      width: 100%;#}
-{#      background-color: #4CAF50;#}
-{#      color: white;#}
-{#      padding: 10px;#}
-{#      border: none;#}
-{#      border-radius: 4px;#}
-{#      cursor: pointer;#}
-{#    }#}
-{##}
-{#    button:hover {#}
-{#      background-color: #45a049;#}
-{#    }#}
-{##}
-{#    #message {#}
-{#      margin-top: 20px;#}
-{#      text-align: center;#}
-{#      font-weight: bold;#}
-{#    }#}
-{#  </style>#}
-{#</head>#}
-{#<body>#}
-{#  <div class="container">#}
-{#    <h1>Login</h1>#}
-{#    <form id="login-form">#}
-{#      <div class="form-group">#}
-{#        <label for="username">Username:</label>#}
-{#        <input type="text" id="username" placeholder="Enter username" required>#}
-{#      </div>#}
-{#      <div class="form-group">#}
-{#        <label for="password">Password:</label>#}
-{#        <input type="password" id="password" placeholder="Enter password" required>#}
-{#      </div>#}
-{#      <button type="submit">Login</button>#}
-{#    </form>#}
-{#    <div id="message"></div>#}
-{#  </div>#}
-{##}
-{#  <script>#}
-{#    document.addEventListener('DOMContentLoaded', function() {#}
-{#      const form = document.getElementById('login-form');#}
-{#      const messageElement = document.getElementById('message');#}
-{##}
-{#      form.addEventListener('submit', function(e) {#}
-{#        e.preventDefault();#}
-{##}
-{#        const username = document.getElementById('username').value;#}
-{#        const password = document.getElementById('password').value;#}
-{##}
-{#        // Make AJAX request#}
-{#        const xhr = new XMLHttpRequest();#}
-{#        xhr.open('POST', '/auth/login', true);#}
-{#        xhr.setRequestHeader('Content-Type', 'application/json');#}
-{##}
-{#        xhr.onreadystatechange = function() {#}
-{#          if (xhr.readyState === XMLHttpRequest.DONE) {#}
-{#            if (xhr.status === 200) {#}
-{#              // Login successful#}
-{#              const response = JSON.parse(xhr.responseText);#}
-{#              messageElement.textContent = 'Login successful!';#}
-{#              messageElement.style.color = 'green';#}
-{#              // Handle successful login (e.g., store token, redirect)#}
-{#              console.log('Login successful:', response);#}
-{#            } else {#}
-{#              // Login failed#}
-{#              messageElement.textContent = 'Login failed. Please try again.';#}
-{#              messageElement.style.color = 'red';#}
-{#              console.error('Login failed');#}
-{#            }#}
-{#          }#}
-{#        };#}
-{##}
-{#        const data = JSON.stringify({ username, password });#}
-{#        xhr.send(data);#}
-{#      });#}
-{#    });#}
-{#  </script>#}
-{##}
-{#  <script>#}
-{#    const express = require('express');#}
-{#    const app = express();#}
-{#    const path = require('path');#}
-{##}
-{#    app.use(express.json()); // Parse JSON request body#}
-{#    app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the "public" directory#}
-{##}
-{#    // In-memory user database (for demonstration purposes)#}
-{#    const users = [#}
-{#      { username: 'admin', password: 'password' },#}
-{#      { username: 'user', password: 'user123' },#}
-{#    ];#}
-{##}
-{#    app.post('/auth/login', (req, res) => {#}
-{#      const { username, password } = req.body;#}
-{##}
-{#      // Authenticate user#}
-{#      const user = users.find(u => u.username === username && u.password === password);#}
-{##}
-{#      if (user) {#}
-{#        // Generate and return a token or session ID#}
-{#        const token = generateToken(); // Implement this function#}
-{#        res.json({ token });#}
-{#      } else {#}
-{#        res.status(401).json({ error: 'Invalid credentials' });#}
-{#      }#}
-{#    });#}
-{##}
-{#    // Serve the index.html file for all other requests#}
-{#    app.get('*', (req, res) => {#}
-{#      res.sendFile(path.join(__dirname, 'public', 'index.html'));#}
-{#    });#}
-{##}
-{#    app.listen(3000, () => {#}
-{#      console.log('Server started on port 3000');#}
-{#    });#}
-{##}
-{#    // Helper function to generate a token (for demonstration purposes)#}
-{#    function generateToken() {#}
-{#      return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);#}
-{#    }#}
-{#  </script>#}
-{#</body>#}
-{#</html>#}
-
 {% extends 'base.html' %}
 
+{% block title %}Login{% endblock %}
+
 {% block content %}
-  <div class="container">
-    <h1>Login</h1>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Login</button>
+    <h2>Login</h2>
+    <form id="login-form" method="post">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
     </form>
-  </div>
-{% endblock %}
-
-{% block styles %}
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-    }
-
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-
-    button {
-      width: 100%;
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    #message {
-      margin-top: 20px;
-      text-align: center;
-      font-weight: bold;
-    }
-  </style>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const response = await fetch('/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.setItem('access', data.access);
+                localStorage.setItem('refresh', data.refresh);
+                window.location.href = '/user_page/';
+            } else {
+                alert(data.error);
+            }
+        });
+    </script>
 {% endblock %}

@@ -16,3 +16,4 @@ class BookStatisticsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ['title', 'author', 'times_borrowed', 'last_year_loans']
+        

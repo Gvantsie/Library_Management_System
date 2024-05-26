@@ -1,10 +1,17 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.authtoken.views import ObtainAuthToken
 import requests
+from rest_framework.decorators import api_view
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from library.models.user_stats import UserStatistics
+from library.serializers.user_stats_serializer import UserStatisticsSerializer
 from users.forms import UserLoginForm, CustomUserCreationForm
 from users.models import CustomUser
 from users.serializers import UserSerializer, User, UserLoginSerializer
@@ -44,55 +51,60 @@ class UserLoginView(ObtainAuthToken):
         return JsonResponse({'token': token, 'user_id': user.pk})
 
 
-def login_(request):
-    if request.method == 'POST':
-        form = UserLoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('library_home')  # Redirect to the library home page
-            else:
-                form.add_error(None, 'Invalid username or password.')
-    else:
-        form = UserLoginForm()
+class UserStatisticsView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    return render(request, 'user/login.html', {'form': form})
+    def get(self, request):
+        user_stats, created = UserStatistics.objects.get_or_create(user=request.user)
+        serializer = UserStatisticsSerializer(user_stats)
+        return Response(serializer.data)
 
 
-def library_home(request):
-    # Check if the user is authenticated
-    if not request.user.is_authenticated:
-        return redirect('login_')
+class LoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = User.objects.filter(username=username).first()
+        if user is None or not user.check_password(password):
+            return Response({"error": "Invalid username or password"}, status=status.HTTP_400_BAD_REQUEST)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })
 
-    # Render the library home page
-    return render(request, 'home.html')
+
+# def library_home(request):
+#     # Check if the user is authenticated
+#     if not request.user.is_authenticated:
+#         return redirect('login_')
+#
+#     # Render the library home page
+#     return render(request, 'home.html')
 
 
-@login_required
-def user_page(request):
-    # Fetch all books
-    books_response = requests.get(request.build_absolute_uri('/books/'))
-    books = books_response.json()
-
-    # Fetch popular books
-    popular_books_response = requests.get(request.build_absolute_uri('/statistics/popular-books/'))
-    popular_books = popular_books_response.json()
-
-    # Fetch book statistics
-    book_stats_response = requests.get(request.build_absolute_uri('/statistics/book-stats/'))
-    book_stats = book_stats_response.json()
-
-    context = {
-        'books': books,
-        'form': form,
-        'popular_books': popular_books,
-        'book_stats': book_stats,
-    }
-
-    return render(request, 'user/user_page.html', context)
+# @login_required
+# def user_page(request):
+#     # Fetch all books
+#     books_response = requests.get(request.build_absolute_uri('/books/'))
+#     books = books_response.json()
+#
+#     # Fetch popular books
+#     popular_books_response = requests.get(request.build_absolute_uri('/statistics/popular-books/'))
+#     popular_books = popular_books_response.json()
+#
+#     # Fetch book statistics
+#     book_stats_response = requests.get(request.build_absolute_uri('/statistics/book-stats/'))
+#     book_stats = book_stats_response.json()
+#
+#     context = {
+#         'books': books,
+#         'form': form,
+#         'popular_books': popular_books,
+#         'book_stats': book_stats,
+#     }
+#
+#     return render(request, 'user/user_page.html', context)
 
 
 @csrf_exempt
@@ -117,3 +129,18 @@ def register(request):
         else:
             return render(request, 'user/register.html', {'error': response.json()})
     return render(request, 'user/register.html')
+
+
+@api_view(['POST'])
+class LoginView(APIView):
+    def post(self, request: Request) -> Response:
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            refresh: RefreshToken = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            })
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)

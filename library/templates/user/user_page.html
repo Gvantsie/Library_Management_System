@@ -1,35 +1,63 @@
 {% extends 'base.html' %}
 
+{% block title %}User Page{% endblock %}
+
 {% block content %}
-  <div class="container">
     <h1>User Page</h1>
+    <h2>Books</h2>
+    <ul id="book-list"></ul>
+    <h2>Statistics</h2>
+    <p>Books Read: <span id="books-read"></span></p>
+    <p>Books Reserved: <span id="books-reserved"></span></p>
+    <script>
+        async function fetchBooks() {
+            const response = await fetch('/books/', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access')
+                }
+            });
+            const data = await response.json();
+            const bookList = document.getElementById('book-list');
+            data.forEach(book => {
+                const li = document.createElement('li');
+                li.textContent = book.title;
+                const button = document.createElement('button');
+                button.textContent = 'Reserve';
+                button.onclick = () => reserveBook(book.id);
+                li.appendChild(button);
+                bookList.appendChild(li);
+            });
+        }
 
-    <h2>Book List</h2>
-    <ul>
-      {% for book in books %}
-        <li>{{ book.title }} by {{ book.author }}</li>
-      {% endfor %}
-    </ul>
+        async function fetchStatistics() {
+            const response = await fetch('/statistics/', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access')
+                }
+            });
+            const data = await response.json();
+            document.getElementById('books-read').textContent = data.books_read;
+            document.getElementById('books-reserved').textContent = data.books_reserved;
+        }
 
-    <h2>Reserve a Book</h2>
-    <form method="post">
-      {% csrf_token %}
-      {{ form }}
-      <button type="submit">Reserve</button>
-    </form>
+        async function reserveBook(bookId) {
+            const response = await fetch('/reserve/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ book_id: bookId })
+            });
+            if (response.ok) {
+                alert('Book reserved');
+                fetchStatistics();
+            }
+        }
 
-    <h2>Popular Books</h2>
-    <ul>
-      {% for book in popular_books %}
-        <li>{{ book.title }} by {{ book.author }}</li>
-      {% endfor %}
-    </ul>
-
-    <h2>Book Statistics</h2>
-    <ul>
-      {% for stat in book_stats %}
-        <li>{{ stat.title }} - Loans: {{ stat.loan_count }}, Last Year Loans: {{ stat.last_year_loans }}</li>
-      {% endfor %}
-    </ul>
-  </div>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchBooks();
+            fetchStatistics();
+        });
+    </script>
 {% endblock %}

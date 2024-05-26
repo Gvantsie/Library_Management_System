@@ -1,14 +1,28 @@
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
-from users.views import UserCreateView, UserDetailView, UserLoginView, login_, register, library_home
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from library.views.book import BookListView
+from library.views.reservation import ReserveBookView
+from users.views import (UserCreateView,
+                         UserDetailView,
+                         UserLoginView,
+                         register,
+                         UserStatisticsView,
+                         LoginView,)
 
 urlpatterns = [
     path('create-user/', UserCreateView.as_view(), name='user-create'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('auth/', obtain_auth_token, name='auth'),
     path('login/', UserLoginView.as_view(), name='login'),
-    path('login_/', login_, name='login_'),
-    path('library/', library_home, name='library_home'),
     path('register/', register, name='register_user'),
 
+    path('login/', LoginView, name='login'),
+    path('books/', BookListView.as_view(), name='book-list'),
+    path('statistics/', UserStatisticsView.as_view(), name='user-statistics'),
+    path('reserve/', ReserveBookView.as_view(), name='reserve-book'),
 ]
+
+
+
