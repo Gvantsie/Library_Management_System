@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}User Registration{% endblock %}
+
+{% block content %}
+<div class="registration-container mt-5">
+    <h2 class="text-center">User Registration</h2>
+    <form id="register-form" class="mt-4" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="first_name">First Name:</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" required>
+        </div>
+        <div class="form-group">
+            <label for="last_name">Last Name:</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" required>
+        </div>
+        <div class="form-group">
+            <label for="personal_number">Personal Number:</label>
+            <input type="text" class="form-control" id="personal_number" name="personal_number" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="birth_date">Birth Date:</label>
+            <input type="date" class="form-control" id="birth_date" name="birth_date" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <div id="error-message" class="mt-3 text-danger" style="display: none;"></div>
+</div>
+
+<script>
+    document.getElementById('register-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const form = document.getElementById('register-form');
+    const formData = new FormData(form);
+
+    fetch('/auth/create-user/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to create user. Status: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debugging: Log response data to console
+        if (data.success) {
+            alert('User created successfully!');
+            window.location.href = '/success_page/';  // Redirect to a success page
+        } else {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = JSON.stringify(data.errors || data.message || 'An error occurred');
+            errorDiv.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('error-message').innerText = 'An error occurred: ' + error.message;
+        document.getElementById('error-message').style.display = 'block';
+    });
+});
+
+</script>
+
+<style>
+    .registration-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .registration-container h2 {
+        font-family: 'Georgia', serif;
+    }
+    .registration-container .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .registration-container .form-control {
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+    }
+    .registration-container .btn {
+        background-color: #0d1a26;
+        border-color: #0d1a26;
+    }
+    .registration-container .btn:hover {
+        background-color: #f8d7da;
+        border-color: #f8d7da;
+        color: #0d1a26;
+    }
+    #error-message {
+        text-align: center;
+    }
+</style>
+{% endblock %}
