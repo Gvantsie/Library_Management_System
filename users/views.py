@@ -6,6 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 import requests
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,14 +22,13 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model, authenticate, login
 from django.http import JsonResponse
 
-
 UserModel = get_user_model()
 
 
-class UserCreateView(APIView):
+class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
         return JsonResponse({'success': False, 'errors': serializer.errors}, status=400)
@@ -65,7 +65,6 @@ class CustomAuthToken(ObtainAuthToken):
         }, status=status.HTTP_200_OK)
 
 
-
 class UserStatisticsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -76,16 +75,19 @@ class UserStatisticsView(APIView):
 
 
 class LoginView(APIView):
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        user = User.objects.filter(username=username).first()
-        if user is None or not user.check_password(password):
-            return Response({"error": "Invalid username or password"}, status=status.HTTP_400_BAD_REQUEST)
-        refresh = RefreshToken.for_user(user)
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = CustomUser.objects.filter(username=username).first()
+
+        if user is None:
+            raise AuthenticationFailed('User not found')
+
+        if not user.check_password(password):
+            raise AuthenticationFailed('Incorrect password')
+
         return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
+            'message': 'Login successful',
         })
 
 
@@ -122,18 +124,18 @@ class LoginView(APIView):
 #     return render(request, 'user/user_page.html', context)
 
 
-@csrf_exempt
-def create_user(request):
-    if request.method == 'POST':
-        # Process the form data
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            # Save the user or perform user creation logic
-            user = form.save()
-            return JsonResponse({'success': True, 'message': 'User created successfully!'})
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+# @csrf_exempt
+# def create_user(request):
+#     if request.method == 'POST':
+#         # Process the form data
+#         form = CustomUserCreationForm(request.POST)
+#         if form.is_valid():
+#             # Save the user or perform user creation logic
+#             user = form.save()
+#             return JsonResponse({'success': True, 'message': 'User created successfully!'})
+#         else:
+#             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+#     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 def register(request):
@@ -146,16 +148,3 @@ def register(request):
     return render(request, 'user/register.html')
 
 
-@api_view(['POST'])
-class LoginView(APIView):
-    def post(self, request: Request) -> Response:
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            refresh: RefreshToken = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            })
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)

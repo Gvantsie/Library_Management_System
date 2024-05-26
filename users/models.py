@@ -9,5 +9,8 @@ class CustomUser(AbstractUser):
     personal_number = models.CharField(max_length=11, unique=True, null=True)
     birth_date = models.DateField(null=True)
 
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
+
     def __str__(self):
         return self.email
