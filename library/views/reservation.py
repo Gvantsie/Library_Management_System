@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -36,9 +37,11 @@ class ReturnBookView(APIView):
         try:
             reservation = Reservation.objects.get(id=reservation_id, user=request.user, status='reserved')
             reservation.status = 'returned'
+            reservation.returned = True
+            reservation.return_date = timezone.now().date()
             reservation.book.copies_available += 1
             reservation.book.save()
-            reservation.save()
+            reservation.save(update_fields=['status', 'returned', 'return_date'])
             return Response(status=status.HTTP_200_OK)
         except Reservation.DoesNotExist:
             return Response({"detail": "Invalid reservation ID or reservation already returned."}, status=status.HTTP_400_BAD_REQUEST)
