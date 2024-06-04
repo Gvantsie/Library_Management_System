@@ -7,6 +7,7 @@ from django.db.models import Count, Q, F
 from library.models.book import Book
 from library.models.reservation import Reservation
 from library.serializers.book_serializers import BookSerializer, BookStatisticsSerializer
+from library.serializers.reservation_serializers import LateReturnedBookSerializer
 from library.views.book import MyPagination
 from users.models import CustomUser
 
@@ -38,35 +39,12 @@ class BookStatisticsAPIView(APIView):
 
 class LateReturnedBooksAPIView(APIView):
     def get(self, request):
-        # Get the current date
         current_date = timezone.now().date()
-
-        # Filter late returned reservations
-        late_reservations = Reservation.objects.filter(return_date__gt=F('due_date'))
-
-        # Aggregate late returned reservations per book
         late_returned_books = Book.objects.annotate(
-            late_returns=Count('reservations', filter=Q(reservations__in=late_reservations))
+            late_returns=Count('reservations', filter=Q(reservations__return_date__gt=F('reservations__due_date')))
         ).order_by('-late_returns')[:100]
-
-        serialized_data = []
-        for book in late_returned_books:
-            late_reservations = late_reservations.filter(book=book)
-            serialized_data.append({
-                'title': book.title,
-                'author': book.author.first_name + ' ' + book.author.last_name,
-                'late_returns': book.late_returns,
-                'late_reservations': [
-                    {
-                        'user': reservation.user.email,
-                        'due_date': reservation.due_date,
-                        'return_date': reservation.return_date,
-                    }
-                    for reservation in late_reservations
-                ]
-            })
-
-        return Response(serialized_data)
+        serializer = LateReturnedBookSerializer(late_returned_books, many=True)
+        return Response(serializer.data)
 
 
 class LateReturnedUsersAPIView(APIView):
