@@ -42,7 +42,7 @@ class ReserveBookView(APIView):
 
     def post(self, request):
         book_id = request.data.get('book_id')
-        book = Book.objects.get(id=book_id)
+        book = Book.objects.get_or_404(id=book_id)
         user_stats, created = UserStatistics.objects.get_or_create(user=request.user)
         user_stats.books_reserved += 1
         user_stats.save()
