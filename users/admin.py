@@ -17,4 +17,5 @@ class CustomUserAdmin(UserAdmin):
             obj.is_staff = True  # Ensure that new users added via the admin are staff
         super().save_model(request, obj, form, change)
 
+
 admin.site.register(CustomUser, CustomUserAdmin)

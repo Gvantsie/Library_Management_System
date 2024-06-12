@@ -14,7 +14,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from library.models.user_stats import UserStatistics
 from library.serializers.user_stats_serializer import UserStatisticsSerializer
@@ -60,18 +63,21 @@ class UserLoginView(ObtainAuthToken):
         return JsonResponse({'token': token, 'user_id': user.pk})
 
 
-class CustomAuthToken(ObtainAuthToken):
+class CustomAuthToken(TokenObtainPairView):
+    serializer_class = TokenObtainPairSerializer
+
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.pk,
-            'username': user.username
-        }, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            raise InvalidToken(e)
+
+        response_data = serializer.validated_data
+        response_data['email'] = serializer.user.email
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class UserStatisticsView(APIView):
@@ -97,7 +103,7 @@ class LoginView(APIView):
 
         payload = {
             'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
             'iat': datetime.datetime.utcnow(),
         }
 
@@ -142,52 +148,6 @@ class LogoutView(APIView):
         }
 
         return response
-
-# def library_home(request):
-#     # Check if the user is authenticated
-#     if not request.user.is_authenticated:
-#         return redirect('login_')
-#
-#     # Render the library home page
-#     return render(request, 'home.html')
-
-
-# @login_required
-# def user_page(request):
-#     # Fetch all books
-#     books_response = requests.get(request.build_absolute_uri('/books/'))
-#     books = books_response.json()
-#
-#     # Fetch popular books
-#     popular_books_response = requests.get(request.build_absolute_uri('/statistics/popular-books/'))
-#     popular_books = popular_books_response.json()
-#
-#     # Fetch book statistics
-#     book_stats_response = requests.get(request.build_absolute_uri('/statistics/book-stats/'))
-#     book_stats = book_stats_response.json()
-#
-#     context = {
-#         'books': books,
-#         'form': form,
-#         'popular_books': popular_books,
-#         'book_stats': book_stats,
-#     }
-#
-#     return render(request, 'user/user_page.html', context)
-
-
-# @csrf_exempt
-# def create_user(request):
-#     if request.method == 'POST':
-#         # Process the form data
-#         form = CustomUserCreationForm(request.POST)
-#         if form.is_valid():
-#             # Save the user or perform user creation logic
-#             user = form.save()
-#             return JsonResponse({'success': True, 'message': 'User created successfully!'})
-#         else:
-#             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-#     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 def register(request):

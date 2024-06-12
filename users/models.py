@@ -1,3 +1,4 @@
+from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
@@ -5,6 +6,11 @@ from django.utils.translation import gettext_lazy as _
 
 
 # Create your models here.
+class CustomUserManager(BaseUserManager):
+    def get_by_natural_key(self, username):
+        return self.get(**{self.model.USERNAME_FIELD: username})
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     first_name = models.CharField(_('first name'), max_length=150, blank=True)
@@ -29,6 +35,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.email

@@ -8,7 +8,7 @@ from users.views import (RegisterView,
                          UserDetailView,
                          UserStatisticsView,
                          LoginView,
-                         CustomAuthToken, UserView, LogoutView,
+                         UserView, LogoutView, register, CustomAuthToken,
                          )
 
 urlpatterns = [
@@ -17,10 +17,12 @@ urlpatterns = [
     path('user/', UserView.as_view(), name='user'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-
+    path('token/', CustomAuthToken.as_view(), name='token'),
     path('books/', BookListView.as_view(), name='book-list'),
     path('statistics/', UserStatisticsView.as_view(), name='user-statistics'),
     path('reserve/', ReserveBookView.as_view(), name='reserve-book'),
+    path('register/', register, name='register'),
+
 ]
 
 
