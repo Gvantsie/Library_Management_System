@@ -20,6 +20,7 @@ class Book(models.Model):
     cover = models.ImageField(verbose_name=_("Cover"), upload_to='cover', null=True, blank=True)
     status = models.CharField(verbose_name=_("Status"), choices=STATUS_CHOICES, max_length=30,
                               default="available", null=False)
+    notified = models.BooleanField(default=False, verbose_name=_("Notified"))
 
     # New fields to track borrowing history and total copies
     times_borrowed = models.PositiveIntegerField(default=0, verbose_name=_("Times Borrowed"))
