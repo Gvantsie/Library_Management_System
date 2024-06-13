@@ -120,17 +120,22 @@ class LoginView(APIView):
 
 class UserView(APIView):
     def get(self, request):
-        token = request.COOKIES.get('jwt')
+        token = request.headers.get('Authorization')
 
         if not token:
             raise AuthenticationFailed('Unauthenticated')
 
+        # Extract the token from the Authorization header (Bearer <token>)
         try:
+            token = token.split()[1]  # Assuming the format is "Bearer <token>"
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated')
 
         user = CustomUser.objects.filter(id=payload['id']).first()
+
+        if not user:
+            raise AuthenticationFailed('User not found')
 
         serializer = UserSerializer(user)
 
