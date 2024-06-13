@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from library.models.book import Book
 
@@ -16,6 +16,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('No new books to notify.'))
             return
 
+        User = get_user_model()  # Use the custom user model
         users = User.objects.filter(is_active=True)
         if not users:
             self.stdout.write(self.style.SUCCESS('No active users to notify.'))
