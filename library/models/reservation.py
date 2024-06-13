@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
@@ -11,10 +12,15 @@ from library.models.book import Book
 
 
 class Reservation(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_("User"), related_name='reservations')
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name=_("Book"), related_name='reservations')
-    reserved_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Reserved At"))
-    status = models.CharField(verbose_name=_("Status"), max_length=20, choices=[('reserved', 'Reserved'), ('canceled', 'Canceled')], default='reserved')
+    STATUS_CHOICES = [
+        ('reserved', 'Reserved'),
+        ('canceled', 'Canceled'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reservations')
+    reserved_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='reserved')
     returned = models.BooleanField(verbose_name=_("Returned"), default=False)
     due_date = models.DateField(verbose_name=_("Due Date"), null=True, blank=True)
     return_date = models.DateField(verbose_name=_("Return Date"), null=True, blank=True)
@@ -26,14 +32,14 @@ class Reservation(models.Model):
         return f"{self.user.email} reserved {self.book.title}"
 
     def clean(self):
-        # Count existing reservations for the user
-        existing_reservations_count = Reservation.objects.filter(user=self.user).count()
+        # Limit user to 3 active reservations
+        existing_reservations_count = Reservation.objects.filter(user=self.user, status='reserved').count()
         if existing_reservations_count >= 3:
             raise ValidationError("You can only reserve up to three books.")
 
         # Set due_date to 1 week after reserved_at if not already set
         if not self.due_date:
-            self.due_date = self.reserved_at.date() + timedelta(days=7)
+            self.due_date = self.reserved_at + timedelta(days=7)
 
     def is_late(self):
         if self.return_date:

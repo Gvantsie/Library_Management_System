@@ -23,7 +23,7 @@ from library.models.user_stats import UserStatistics
 from library.serializers.user_stats_serializer import UserStatisticsSerializer
 from users.forms import UserLoginForm, CustomUserCreationForm
 from users.models import CustomUser
-from users.serializers import UserSerializer, User, UserLoginSerializer
+from users.serializers import UserSerializer, User, UserLoginSerializer, CustomTokenObtainPairSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model, authenticate, login
@@ -64,7 +64,7 @@ class UserLoginView(ObtainAuthToken):
 
 
 class CustomAuthToken(TokenObtainPairView):
-    serializer_class = TokenObtainPairSerializer
+    serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -72,11 +72,9 @@ class CustomAuthToken(TokenObtainPairView):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            raise InvalidToken(e)
+            raise AuthenticationFailed(e)
 
         response_data = serializer.validated_data
-        response_data['email'] = serializer.user.email
-
         return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -120,13 +118,14 @@ class LoginView(APIView):
 
 class UserView(APIView):
     def get(self, request):
-        token = request.headers.get('Authorization')
+        auth_header = request.headers.get('Authorization')
 
-        if not token:
-            raise AuthenticationFailed('Unauthenticated')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise AuthenticationFailed('Invalid or missing Authorization header')
 
         # Extract the token from the Authorization header (Bearer <token>)
         try:
+            token = auth_header.split()[1]
             token = token.split()[1]  # Assuming the format is "Bearer <token>"
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:

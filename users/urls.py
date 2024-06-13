@@ -17,10 +17,9 @@ urlpatterns = [
     path('user/', UserView.as_view(), name='user'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-    path('token/', CustomAuthToken.as_view(), name='token'),
-    path('books/', BookListView.as_view(), name='book-list'),
+    path('token/obtain/', CustomAuthToken.as_view(), name='token_obtain'),
     path('statistics/', UserStatisticsView.as_view(), name='user-statistics'),
-    path('reserve/', ReserveBookView.as_view(), name='reserve-book'),
+    path('book/<int:book_id>/reserve/', ReserveBookView.as_view(), name='reserve-book'),
     path('register/', register, name='register'),
 
 ]

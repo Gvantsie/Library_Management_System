@@ -1,10 +1,21 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import gettext_lazy as _
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import CustomUser
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        serializer = UserSerializer(instance=user)
+        for key, value in serializer.data.items():
+            data[key] = value
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -22,7 +33,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
-
 
 class UserLoginSerializer(serializers.Serializer):
     """Serializer for user login"""

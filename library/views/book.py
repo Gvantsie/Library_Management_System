@@ -26,11 +26,6 @@ class BookListView(generics.ListAPIView):
     ordering_fields = ['title', 'publication_date']
     pagination_class = MyPagination
 
-    def get(self, request):
-        books = Book.objects.all()
-        serializer = BookSerializer(books, many=True)
-        return Response(serializer.data)
-
 
 class BookDetailView(generics.RetrieveAPIView):
     queryset = Book.objects.all()

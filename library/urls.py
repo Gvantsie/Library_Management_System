@@ -13,7 +13,6 @@ from library.views.statistics import (PopularBooksAPIView,
 urlpatterns = [
     path('books/', BookListView.as_view(), name='book-list'),
     path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),
-    path('books/<int:book_id>/reserve/', ReserveBookView.as_view(), name='reserve-book'),
     path('reservations/<int:reservation_id>/return/', ReturnBookView.as_view(), name='return-book'),
     path('reservations/<int:pk>/mark-returned/', MarkBookReturnedView.as_view(), name='mark-book-returned'),
     path('statistics/popular-books/', PopularBooksAPIView.as_view(), name='popular-books'),

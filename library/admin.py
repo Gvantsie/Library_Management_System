@@ -9,7 +9,7 @@ from library.models.transaction import BookTransaction
 # Register your models here.
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'stock','times_borrowed', 'total_copies',)
+    list_display = ('title', 'author', 'stock', 'times_borrowed', 'total_copies',)
     list_filter = ('title', 'author', 'status', 'genre',)
     search_fields = ('title', 'author', 'status', 'genre',)
     list_per_page = 20

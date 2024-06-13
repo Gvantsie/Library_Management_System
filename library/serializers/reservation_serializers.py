@@ -6,12 +6,9 @@ from library.models.reservation import Reservation
 
 # Create your serializers here
 class ReservationSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)  # to use only authenticated users
-
     class Meta:
         model = Reservation
-        fields = ['id', 'user', 'book', 'reserved_at', 'status']
-        read_only_fields = ['reserved_at', 'status']
+        fields = ['id', 'user', 'book', 'reserved_at', 'due_date', 'status', 'returned', 'return_date']
 
 
 class ReservationReturnSerializer(serializers.ModelSerializer):
